@@ -1,0 +1,2 @@
+# magcal
+(Magical) Magnetometer Calibration
