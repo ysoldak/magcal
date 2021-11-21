@@ -75,7 +75,7 @@ func TestSearch(t *testing.T) {
 	// search for solution
 	iter := mc.search()
 
-	fmt.Printf("%d %+0.3f %+0.3f\r\n", iter, mc.errorTotal(), mc.errorTotal()/DefaultBufferSize)
+	fmt.Printf("%d %+0.3f %+0.3f\r\n", iter, mc.errorTotal(), mc.errorTotal()/float32(mc.Config.BufferSize))
 	mc.State.dump()                             // found solution
 	diff := mc.State.diff(NewState(calOptimal)) // difference from optimal
 	diff.dump()

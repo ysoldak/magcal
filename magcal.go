@@ -71,7 +71,7 @@ func (mc *MagCal) Apply(x, y, z float32) (xx, yy, zz float32) {
 	if mc.working {
 		return
 	}
-	if mc.error(w) < DefautlTolerance { // small error
+	if mc.error(w) < mc.Config.Tolerance { // small error
 		return
 	}
 	mc.buf.push(v)
@@ -132,7 +132,7 @@ func (mc *MagCal) search() int {
 // --- utils ---
 
 func (mc *MagCal) error(v vector) float32 {
-	return abs(v.lenSq() - DefaultTarget)
+	return abs(v.lenSq() - mc.Config.Target)
 	// return abs(v.len() - DefaultTarget)
 }
 
