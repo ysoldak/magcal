@@ -35,26 +35,41 @@ func TestCustom(t *testing.T) {
 }
 
 var calOptimal = []float32{
+
+	// fake
 	0.5, -0.2, 0.1, // offset
 	1.0, -0.15, 0.0, // covariance matrix
 	0.0, 1.2, 0.1,
 	0.0, 0.19, 1.1,
+
+	// real from board
 	// -0.13, 0.24, 0.05,
 	// 0.99, -0.15, -0.05,
 	// 0.19, 1.04, -0.11,
 	// 0.09, 0.14, 1.10,
+
 }
 
+// 5 of 8 quadrants are enough to have a good result (sometimes)
+// does not matter which, 5 is enough for them be on different sides of (0,0)
 func TestSearch(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
+
+	// activeQuadrants := []byte{0, 1, 2, 3, 4}
+	activeQuadrants := []byte{0, 1, 2, 3, 4, 5, 6, 7}
 
 	mc := NewDefault()
 
 	// load buffer with random uncalibrated vectors
 	for !mc.buf.full() {
 		v := unCalibrate(randomCalibrated(), calOptimal)
-		mc.buf.push(v)
+		q := v.quadrant()
+		for _, a := range activeQuadrants {
+			if q == a {
+				mc.buf.push(v)
+			}
+		}
 	}
 
 	// search for solution
