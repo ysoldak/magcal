@@ -7,20 +7,19 @@ _Flash manipulations are highly device specific, not covered here and shall be d
 
 The library can adapt to changing environment and provide stable low-error results on the go, something that is important for portable.
 
-Internally, the library applies gradient descent to task of finding magnetometer calibration parameters.  
-Optimisation for embedded use brings `float32` instead of standard `float64`.  
-Calibration happens on background, continuously.
-
+Internally, the library applies [gradient descent](https://blog.skz.dev/gradient-descent) to task of finding magnetometer calibration parameters.  
+Calibration happens on background, continuously.  
+Optimising for embedded, we use `float32` instead of standard `float64`.  
 
 ## Magnetometer calibration is a tedious task
 
-Magnetometer sensor returns a vector along Earth magnetic field.  
-Readings collected while rotating the sensor around shall produce points that lay on a sphere with its center in sensor.
+Magnetometer sensor returns a vector along [Earth's magnetic field](https://en.wikipedia.org/wiki/Earth%27s_magnetic_field).  
+Readings, collected while rotating the sensor around, shall produce points on a sensor-centered sphere.
 
-Sensor though is affected by hard- and soft-iron effects.
-These effects distort perfect sphere to something resembling an elongated melon, offset from origin too.
+Sensor, though, is affected by hard- and soft-iron effects.  
+These effects distort sphere to something resembling an elongated melon, offset from origin too.
 
-There is a [mathematical model that describes this distortion](https://www.vectornav.com/resources/inertial-navigation-primer/specifications--and--error-budgets/specs-hsicalibration) and a formula to bring raw readings back on perfect centered sphere.
+There is a [mathematical model that describes this distortion](https://www.vectornav.com/resources/inertial-navigation-primer/specifications--and--error-budgets/specs-hsicalibration) and a formula to bring raw readings back on centered sphere.  
 The task of calibration is to find parameters for that formula, since every sensor is different and no two environments are the same.
 
 First, we need to collect some raw data to work with.  
