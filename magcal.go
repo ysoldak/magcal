@@ -85,30 +85,45 @@ func (mc *MagCal) Apply(x, y, z float32) (xx, yy, zz float32) {
 func (mc *MagCal) search() int {
 	mc.working = true
 
+	// offests, cov trace, rest
+	indices := []int{0, 1, 2, 3, 7, 11, 4, 5, 6, 8, 9, 10}
+
 	curErr := mc.errorTotal()
 	iter := 0
 	improved := true
 	// println(curErr)
+	// println()
 	for improved {
 		iter++
 		improved = false
-		for _, s := range [2]float32{-1, 1} {
-			step := s * DefaultStep
-			for i := 0; i < 12; i++ {
-				mc.State.data[i] += step
-				if !mc.isGoodChange(i) {
-					mc.State.data[i] -= step // revert
-					continue
+		// print("#")
+		for _, i := range indices {
+			// print("*")
+			for _, s := range [2]float32{-1, 1} {
+				step := s * mc.Config.Step
+				for {
+					mc.State.data[i] += step
+					if !mc.isGoodChange(i) {
+						mc.State.data[i] -= step // revert
+						break
+					}
+					newErr := mc.errorTotal()
+					if newErr >= curErr {
+						mc.State.data[i] -= step // revert
+						break
+					}
+					// if s > 0 {
+					// 	print("+")
+					// } else {
+					// 	print("-")
+					// }
+					curErr = newErr
+					improved = true
 				}
-				newErr := mc.errorTotal()
-				if newErr >= curErr {
-					mc.State.data[i] -= step // revert
-					continue
-				}
-				curErr = newErr
-				improved = true
 			}
 		}
+		// println()
+		// mc.State.dump()
 	}
 	mc.working = false
 	return iter

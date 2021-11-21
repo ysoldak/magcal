@@ -52,12 +52,10 @@ func TestSearch(t *testing.T) {
 	mc := NewDefault()
 
 	// load buffer with random uncalibrated vectors
-	mc.Start()
 	for !mc.buf.full() {
 		v := unCalibrate(randomCalibrated(), calOptimal)
-		mc.Apply(v[0], v[1], v[2])
+		mc.buf.push(v)
 	}
-	mc.Stop()
 
 	// search for solution
 	iter := mc.search()
@@ -103,18 +101,12 @@ func BenchmarkSearch(b *testing.B) {
 		mc := NewDefault()
 		for i := 0; i < mc.Config.BufferSize*10; i++ {
 			v := unCalibrate(randomCalibrated(), calOptimal)
-			mc.pushAndSearch(v)
+			mc.buf.push(v)
+			if mc.buf.full() {
+				mc.search()
+			}
 		}
 	}
-}
-
-// helper for benchmark
-func (mc *MagCal) pushAndSearch(v vector) int {
-	mc.buf.push(v)
-	if !mc.buf.full() {
-		return 0
-	}
-	return mc.search()
 }
 
 func randomCalibrated() (v vector) {
