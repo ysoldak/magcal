@@ -101,6 +101,9 @@ func (mc *MagCal) search() int {
 			// print("*")
 			for _, s := range [2]float32{-1, 1} {
 				step := s * mc.Config.Step
+				if i < 3 { // offset must be adjusted with larger steps
+					step *= mc.Config.Target
+				}
 				for {
 					mc.State.data[i] += step
 					if !mc.isGoodChange(i) {
