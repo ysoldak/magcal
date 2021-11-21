@@ -151,6 +151,20 @@ func (mc *MagCal) errorTotal() float32 {
 	return sum
 }
 
+func (mc *MagCal) isGoodChange(i int) bool {
+	if i < 3 {
+		return true
+	}
+	val := abs(mc.State.data[i])
+	if i == 3 || i == 7 || i == 11 {
+		return 0.5 < val && val < 2
+	}
+	x := abs(mc.State.data[3])
+	y := abs(mc.State.data[7])
+	z := abs(mc.State.data[11])
+	return val*5 < x && val*5 < y && val*5 < z
+}
+
 // trace values (of cov matrix):
 // none of them can be more than twice bigger than other trace values
 //
@@ -177,20 +191,6 @@ func (mc *MagCal) errorTotal() float32 {
 // 	}
 // 	return true
 // }
-
-func (mc *MagCal) isGoodChange(i int) bool {
-	if i < 3 {
-		return true
-	}
-	val := abs(mc.State.data[i])
-	if i == 3 || i == 7 || i == 11 {
-		return 0.5 < val && val < 2
-	}
-	x := abs(mc.State.data[3])
-	y := abs(mc.State.data[7])
-	z := abs(mc.State.data[11])
-	return val*5 < x && val*5 < y && val*5 < z
-}
 
 func abs(f float32) float32 {
 	if f < 0 {

@@ -1,6 +1,7 @@
 package magcal
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -28,4 +29,25 @@ func TestCustomState(t *testing.T) {
 	if !actual.close(expect, 3) {
 		t.Fatalf(`want %v got %v`, expect, actual)
 	}
+}
+
+// Helper methods
+
+func (s State) dump() {
+	println("===")
+	for i := range s.data {
+		fmt.Printf("%+0.2f ", s.data[i])
+		if i > 0 && (i+1)%3 == 0 {
+			println()
+		}
+	}
+	println("===")
+}
+
+func (s State) diff(ss State) State {
+	result := make([]float32, 12)
+	for i := range s.data {
+		result[i] = s.data[i] - ss.data[i]
+	}
+	return NewState(result)
 }
