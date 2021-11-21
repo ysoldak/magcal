@@ -141,9 +141,9 @@ func (mc *MagCal) errorTotal() float32 {
 	for _, v := range mc.buf.data {
 		w := mc.State.apply(v)
 		sum += mc.error(w)
-		// if mc.Throttle > 0 {
-		// 	time.Sleep(mc.Throttle / time.Duration(mc.buf.size))
-		// }
+		if mc.Config.Throttle > 0 {
+			time.Sleep(mc.Config.Throttle / time.Duration(mc.buf.size))
+		}
 	}
 	return sum
 }
