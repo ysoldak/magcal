@@ -76,7 +76,7 @@ func TestSearch(t *testing.T) {
 	// search for solution
 	iter := mc.search()
 
-	fmt.Printf("%d %+0.3f %+0.3f\r\n", iter, mc.errorTotal(), mc.errorTotal()/float32(mc.Config.BufferSize))
+	fmt.Printf("%d %+0.3f %+0.3f\r\n", iter, mc.errorTotal(), mc.errorTotal()/float32(mc.config.BufferSize))
 	mc.State.dump()                             // found solution
 	diff := mc.State.diff(NewState(calOptimal)) // difference from optimal
 	diff.dump()
@@ -95,7 +95,7 @@ func TestSearch(t *testing.T) {
 
 	// check
 	for i, s := range diff.data {
-		if (i < 3) && abs(s) > mc.Config.Target*0.1 {
+		if (i < 3) && abs(s) > mc.config.Target*0.1 {
 			t.Fatal("Result calibration matrix offset item differs more than 10%: ", i, s, calOptimal[i])
 		} else if (i == 3 || i == 7 || i == 11) && abs(s) > 0.1 { // trace shall be quite good
 			t.Fatal("Result calibration matrix trace item differs more than 0.1: ", i, s, calOptimal[i])
@@ -108,7 +108,7 @@ func TestSearch(t *testing.T) {
 	for _, v := range mc.buf.raw {
 		w := mc.State.apply(v)
 		e := mc.error(w)
-		if e > mc.Config.Tolerance*10 {
+		if e > mc.config.Tolerance*10 {
 			fmt.Printf("%v, %+0.3f, %+0.3f\r\n", w.string(), w.len(), e)
 			t.Fatalf(`error larger than expected: %0.4f`, e)
 		}
@@ -120,7 +120,7 @@ func BenchmarkSearch(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	for n := 0; n < b.N; n++ {
 		mc := NewDefault()
-		for i := 0; i < mc.Config.BufferSize*10; i++ {
+		for i := 0; i < mc.config.BufferSize*10; i++ {
 			v := unCalibrate(randomCalibrated(), calOptimal)
 			w := mc.State.apply(v) // at first v and w be same, and after buffer fills they diverge
 			mc.buf.push(v, w)

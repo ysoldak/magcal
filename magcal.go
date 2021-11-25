@@ -12,13 +12,14 @@ const (
 )
 
 type MagCal struct {
-	State  State
-	Config Configuration
+	State State
 
 	// internal
+	config  Configuration
 	active  bool
 	working bool
 	buf     buffer
+	target2 float32 // target squared, for speed
 }
 
 type Configuration struct {
@@ -46,10 +47,11 @@ func NewDefault() *MagCal {
 func New(state State, config Configuration) *MagCal {
 	return &MagCal{
 		State:   state,
-		Config:  config,
+		config:  config,
 		active:  false,
 		working: false,
 		buf:     buffer{size: config.BufferSize},
+		target2: config.Target * config.Target,
 	}
 }
 
@@ -71,7 +73,7 @@ func (mc *MagCal) Apply(x, y, z float32) (xx, yy, zz float32) {
 	if mc.working {
 		return
 	}
-	if mc.error(w) < mc.Config.Tolerance { // small error
+	if mc.error(w) < mc.config.Tolerance { // small error
 		return
 	}
 	mc.buf.push(v, w)
@@ -100,9 +102,9 @@ func (mc *MagCal) search() int {
 		for _, i := range indices {
 			// print("*")
 			for _, s := range [2]float32{-1, 1} {
-				step := s * mc.Config.Step
+				step := s * mc.config.Step
 				if i < 3 { // offset must be adjusted with larger steps
-					step *= mc.Config.Target
+					step *= mc.config.Target
 				}
 				for {
 					if !mc.isGoodChange(i, step) {
@@ -135,16 +137,16 @@ func (mc *MagCal) search() int {
 // --- utils ---
 
 func (mc *MagCal) error(v vector) float32 {
-	return abs(v.lenSq() - mc.Config.Target)
-	// return abs(v.len() - DefaultTarget)
+	return abs(v.lenSq() - mc.target2)
+	// return abs(v.len() - mc.Config.Target)
 }
 
 func (mc *MagCal) errorTotal() float32 {
 	sum := float32(0)
 	for _, w := range mc.buf.cal {
 		sum += mc.error(w)
-		if mc.Config.Throttle > 0 {
-			time.Sleep(mc.Config.Throttle / time.Duration(mc.buf.size))
+		if mc.config.Throttle > 0 {
+			time.Sleep(mc.config.Throttle / time.Duration(mc.buf.size))
 		}
 	}
 	return sum
