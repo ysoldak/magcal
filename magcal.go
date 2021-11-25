@@ -152,12 +152,14 @@ func (mc *MagCal) errorTotal() float32 {
 	return sum
 }
 
+// isGoodChange verifies is it OK to adjust
+// "i"th calibration parameter by "step"
 func (mc *MagCal) isGoodChange(i int, step float32) bool {
-	if i < 3 {
+	if i < 3 { // offset is always fine
 		return true
 	}
 	val := abs(mc.State.data[i] + step)
-	if i == 3 || i == 7 || i == 11 {
+	if i == 3 || i == 7 || i == 11 { // covariance matrix
 		return 0.5 < val && val < 2
 	}
 	x := abs(mc.State.data[3])
@@ -166,6 +168,9 @@ func (mc *MagCal) isGoodChange(i int, step float32) bool {
 	return val*5 < x && val*5 < y && val*5 < z
 }
 
+// adjustBuffer recalculates calibrated vectors in buffer
+// given "idx"th calibration parameter changed by "step"
+// calVec[i] = cov[i][0]*(raw[i]-off[i]) + ... + cov[i][2]*(raw[i]-off[i])
 func (mc *MagCal) adjustBuffer(idx int, step float32) {
 	for n, w := range mc.buf.cal {
 		if idx < 3 {
