@@ -82,12 +82,13 @@ func TestSearch(t *testing.T) {
 	diff.dump()
 
 	// buffer
-	// for _, v := range mc.buf.data {
+	// for _, v := range mc.buf.raw {
 	// 	w := mc.State.apply(v)
 	// 	e := mc.error(w)
 	// 	fmt.Printf("%v, %+0.3f, %+0.3f\r\n", w.string(), w.len(), e)
 	// }
-	// for _, w := range mc.buf.dataCal {
+	// println()
+	// for _, w := range mc.buf.cal {
 	// 	e := mc.error(w)
 	// 	fmt.Printf("%v, %+0.3f, %+0.3f\r\n", w.string(), w.len(), e)
 	// }
