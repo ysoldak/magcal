@@ -64,10 +64,11 @@ func TestSearch(t *testing.T) {
 	// load buffer with random uncalibrated vectors
 	for !mc.buf.full() {
 		v := unCalibrate(randomCalibrated(), calOptimal)
+		w := mc.State.apply(v) // it be same as v here actually, since no calibration happened yet
 		q := v.quadrant()
 		for _, a := range activeQuadrants {
 			if q == a {
-				mc.buf.push(v)
+				mc.buf.push(v, w)
 			}
 		}
 	}
@@ -86,6 +87,10 @@ func TestSearch(t *testing.T) {
 	// 	e := mc.error(w)
 	// 	fmt.Printf("%v, %+0.3f, %+0.3f\r\n", w.string(), w.len(), e)
 	// }
+	// for _, w := range mc.buf.dataCal {
+	// 	e := mc.error(w)
+	// 	fmt.Printf("%v, %+0.3f, %+0.3f\r\n", w.string(), w.len(), e)
+	// }
 
 	// check
 	for i, s := range diff.data {
@@ -99,7 +104,7 @@ func TestSearch(t *testing.T) {
 	}
 
 	// check error for each vector in buffer
-	for _, v := range mc.buf.data {
+	for _, v := range mc.buf.raw {
 		w := mc.State.apply(v)
 		e := mc.error(w)
 		if e > mc.Config.Tolerance*10 {
@@ -116,7 +121,8 @@ func BenchmarkSearch(b *testing.B) {
 		mc := NewDefault()
 		for i := 0; i < mc.Config.BufferSize*10; i++ {
 			v := unCalibrate(randomCalibrated(), calOptimal)
-			mc.buf.push(v)
+			w := mc.State.apply(v) // at first v and w be same, and after buffer fills they diverge
+			mc.buf.push(v, w)
 			if mc.buf.full() {
 				mc.search()
 			}

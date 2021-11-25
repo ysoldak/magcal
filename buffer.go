@@ -1,20 +1,22 @@
 package magcal
 
 type buffer struct {
-	size      int
-	data      []vector
-	quadrants [8]([]*vector)
-	qmax      byte
+	size      int            // maximum number of vectors in buffer
+	raw       []vector       // raw vectors
+	cal       []vector       // calibrated vectors, optimise gradient calculations
+	quadrants [8]([]*vector) // quadrants of raw vectors, used to determine which existing vector shall go on push
+	qmax      byte           // index of quadrant with most vectors
 }
 
 func (b *buffer) full() bool {
-	return len(b.data) == b.size
+	return len(b.raw) == b.size
 }
 
-func (b *buffer) push(v vector) {
+func (b *buffer) push(v vector, w vector) {
 	vq := v.quadrant()
 	if !b.full() {
-		b.data = append(b.data, v)
+		b.raw = append(b.raw, v)
+		b.cal = append(b.cal, w)
 		b.quadrants[vq] = append(b.quadrants[vq], &v)
 		if len(b.quadrants[vq]) > len(b.quadrants[b.qmax]) {
 			b.qmax = vq
@@ -23,9 +25,10 @@ func (b *buffer) push(v vector) {
 	}
 	rv := b.quadrants[b.qmax][0]
 	b.quadrants[b.qmax] = b.quadrants[b.qmax][1:] // remove from quadrant
-	for ci, cv := range b.data {                  // replace in data
+	for ci, cv := range b.raw {                   // replace in raw and cal
 		if &cv == rv {
-			b.data[ci] = v
+			b.raw[ci] = v
+			b.cal[ci] = w
 			break
 		}
 	}

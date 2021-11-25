@@ -74,7 +74,7 @@ func (mc *MagCal) Apply(x, y, z float32) (xx, yy, zz float32) {
 	if mc.error(w) < mc.Config.Tolerance { // small error
 		return
 	}
-	mc.buf.push(v)
+	mc.buf.push(v, w)
 	if !mc.buf.full() {
 		return
 	}
@@ -105,14 +105,13 @@ func (mc *MagCal) search() int {
 					step *= mc.Config.Target
 				}
 				for {
-					mc.State.data[i] += step
-					if !mc.isGoodChange(i) {
-						mc.State.data[i] -= step // revert
+					if !mc.isGoodChange(i, step) {
 						break
 					}
+					mc.adjustBuffer(i, step)
 					newErr := mc.errorTotal()
 					if newErr >= curErr {
-						mc.State.data[i] -= step // revert
+						mc.adjustBuffer(i, -step) // revert
 						break
 					}
 					// if s > 0 {
@@ -120,6 +119,7 @@ func (mc *MagCal) search() int {
 					// } else {
 					// 	print("-")
 					// }
+					mc.State.data[i] += step
 					curErr = newErr
 					improved = true
 				}
@@ -141,8 +141,7 @@ func (mc *MagCal) error(v vector) float32 {
 
 func (mc *MagCal) errorTotal() float32 {
 	sum := float32(0)
-	for _, v := range mc.buf.data {
-		w := mc.State.apply(v)
+	for _, w := range mc.buf.cal {
 		sum += mc.error(w)
 		if mc.Config.Throttle > 0 {
 			time.Sleep(mc.Config.Throttle / time.Duration(mc.buf.size))
@@ -151,11 +150,11 @@ func (mc *MagCal) errorTotal() float32 {
 	return sum
 }
 
-func (mc *MagCal) isGoodChange(i int) bool {
+func (mc *MagCal) isGoodChange(i int, step float32) bool {
 	if i < 3 {
 		return true
 	}
-	val := abs(mc.State.data[i])
+	val := abs(mc.State.data[i] + step)
 	if i == 3 || i == 7 || i == 11 {
 		return 0.5 < val && val < 2
 	}
@@ -163,6 +162,24 @@ func (mc *MagCal) isGoodChange(i int) bool {
 	y := abs(mc.State.data[7])
 	z := abs(mc.State.data[11])
 	return val*5 < x && val*5 < y && val*5 < z
+}
+
+func (mc *MagCal) adjustBuffer(idx int, step float32) {
+	for n, w := range mc.buf.cal {
+		if idx < 3 {
+			// offset value changed
+			// each coord shall be adjusted by step multiplied by respective cov value
+			for i := 0; i < 3; i++ {
+				w[i] -= mc.State.cov[i*3+idx] * step
+			}
+		} else {
+			// cov value changed
+			// enough to adjust one coord
+			i := idx/3 - 1 // row
+			j := idx % 3   // column
+			w[i] += step * (mc.buf.raw[n][j] - mc.State.off[j])
+		}
+	}
 }
 
 // trace values (of cov matrix):
