@@ -36,7 +36,7 @@ func TestCustomState(t *testing.T) {
 func (s State) dump() {
 	println("===")
 	for i := range s.data {
-		fmt.Printf("%+0.2f ", s.data[i])
+		fmt.Printf("%5.2f, ", s.data[i])
 		if i > 0 && (i+1)%3 == 0 {
 			println()
 		}
